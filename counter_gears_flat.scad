@@ -1,7 +1,10 @@
 use <publicDomainGearV1.1.scad>
+use <bitmap.scad>
 
 function center_distance(t1, t2) = pitch_radius(number_of_teeth=t1, mm_per_tooth = mm_per_tooth) 
   + pitch_radius(number_of_teeth=t2, mm_per_tooth = mm_per_tooth);
+
+digit_width=8;
 
 num_digits=10;
 
@@ -90,7 +93,22 @@ module spacing_disc() {
   }
 }
 
+chars=["0","1","2","3","4","5","6","7","8","9"];
+module numeral_disc() {
+  render()
+  difference() {
+    cylinder(r=outer_radius(mm_per_tooth = mm_per_tooth, number_of_teeth = 20), h=t, center=true, $fn=72);
+    cylinder(r=d/2, h=t*2, center=true, $fn=36);
+
+    for (i=[0:9]) {
+      rotate([0, 0, 360/10*i - 90]) translate([-outer_radius(mm_per_tooth=mm_per_tooth, number_of_teeth=20) + digit_width/2, 0, -t]) 
+        8bit_char(chars[i], digit_width/8,t*2,false);
+    }
+  }
+}
+
 module gear_assembly_a() {
+  translate([0, 0, t]) numeral_disc();
   two_tooth_gear();
   translate([0, 0, -t]) retaining_disc();
   translate([0, 0, -2*t]) spacing_disc();
@@ -98,6 +116,7 @@ module gear_assembly_a() {
 }
 
 module gear_assembly_b() {
+  translate([0, 0, t]) numeral_disc();
   complete_gear();
   translate([0, 0, -t]) spacing_disc();
   translate([0, 0, -2*t]) retaining_disc();
@@ -116,7 +135,7 @@ module carrier_plate() {
   assign(height=complete_gear_od+20)
   difference() {
     cube(size=[width, height, t], center=true);
-    translate([-width/2 + complete_gear_od/2, 0, 0]) {
+    translate([-width/2 + 10 + complete_gear_od/2, 0, 0]) {
       for (i=[0:num_digits-1]) {
         translate([gear_to_gear*i, 0, 0]) {
           cylinder(r=d/2, h=t*2, center=true, $fn=36);
@@ -129,20 +148,16 @@ module carrier_plate() {
         }
       }
     }
-    // for (i=[-1:1]) {
-    //       translate([i * center_distance(mm_per_tooth = mm_per_tooth, t1=20,t2=8), 0, 0])
-    //       cylinder(r=d/2 - 0.5, h=t*2, center=true, $fn=36);
-    //     }
   }
 }
 
-// projection(cut=true) {
-//   // retaining_disc();
-//   // two_tooth_gear();
-//   // partial_connecting_gear();
-//   // full_connecting_gear();
-//   carrier_plate();
-// }
+module digit_window_faceplate() {
+  cube(size=[digit_width+5, complete_gear_od+5+2*t, t], center=true);
+}
+
+module digit_window_assembly() {
+  digit_window_faceplate();
+}
 
 cd=center_distance(mm_per_tooth=mm_per_tooth, t1=20, t2=8);
 gear_to_gear=2*center_distance(mm_per_tooth=mm_per_tooth, t1=20, t2=8);
@@ -189,3 +204,4 @@ module assembled() {
 }
 
 assembled();
+
