@@ -1,4 +1,4 @@
-use <../publicDomainGearV1.1.scad>
+use <publicDomainGearV1.1.scad>
 
 function center_distance(t1, t2) = pitch_radius(number_of_teeth=t1, mm_per_tooth = mm_per_tooth) 
   + pitch_radius(number_of_teeth=t2, mm_per_tooth = mm_per_tooth);
@@ -84,20 +84,20 @@ module carrier_plate() {
   }
 }
 
-projection(cut=true) {
-  // retaining_disc();
-  // two_tooth_gear();
-  // partial_connecting_gear();
-  // full_connecting_gear();
-  carrier_plate();
-}
+// projection(cut=true) {
+//   // retaining_disc();
+//   // two_tooth_gear();
+//   // partial_connecting_gear();
+//   // full_connecting_gear();
+//   carrier_plate();
+// }
 
-// translate([-center_distance(20,8), 0, 0]) rotate([0, 0, min($t, 0.1) / 0.1 * 360/20*2]) 
-  // complete_gear();
-// translate([center_distance(20,8), 0, 0]) rotate([0, 0, -360/20 + $t * 360]) 
-  // drive_gear_assembly();
-// assign(x = $t % 0.1 / 0.1)
-// assign()
-// rotate([0, 0, min($t, 0.1) / 0.1 * -90]) connecting_gear_assembly();
+translate([-center_distance(20,8), 0, 0]) rotate([0, 0, min($t, 0.1) / 0.1 * 360/20*2]) 
+  complete_gear();
+translate([center_distance(20,8), 0, 0]) rotate([0, 0, -360/20 + $t * 360]) 
+  drive_gear_assembly();
+assign(x = $t % 0.1 / 0.1)
+assign()
+rotate([0, 0, min($t, 0.1) / 0.1 * -90]) connecting_gear_assembly();
 
-// translate([0, 0, -2*t]) carrier_plate();
+translate([0, 0, -2*t]) carrier_plate();
