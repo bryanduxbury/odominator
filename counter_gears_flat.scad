@@ -6,7 +6,7 @@ use <bitmap.scad>
 
 
 digit_width=8;
-num_digits=5;
+num_digits=4;
 
 // material thickness
 // t = 5.2; // birch ply
@@ -21,10 +21,11 @@ crank_gear_num_teeth=60;
 
 crank_connecting_gear_num_teeth = 8;
 
-carrier_plate_height=6.5*25;
+carrier_plate_height=6*25;
 
 mm_per_tooth = 5;
 
+side_gutter=10;
 
 function big_gear_or() = outer_radius(mm_per_tooth=mm_per_tooth, number_of_teeth=20);
 function big_gear_root_r() = root_radius(mm_per_tooth=mm_per_tooth, number_of_teeth=20);
@@ -37,7 +38,8 @@ function digit_window_faceplate_height() = (big_gear_or() + 3 * t)*2;
 function distance_between_big_gears() = 2 * center_distance(mm_per_tooth=mm_per_tooth, num_teeth1=20, num_teeth2=8);
 function distance_between_big_and_small_gears() = center_distance(mm_per_tooth=mm_per_tooth, num_teeth1=20, num_teeth2=8);
 
-function faceplate_width() = distance_between_big_gears() * num_digits + 20;
+function faceplate_width() = distance_between_big_gears() * num_digits + side_gutter;
+echo("faceplate_width", faceplate_width());
 
 module full_connecting_gear() {
   color([64/255, 64/255, 64/255]) 
@@ -158,13 +160,18 @@ module gear_assembly_b() {
 
 module carrier_plate() {
   color([32/255, 192/255, 32/255])
-  assign(width=distance_between_big_gears()*num_digits + 20)
+  assign(width=faceplate_width(0))
   assign(height=carrier_plate_height)
   render()
   difference() {
     cube(size=[width, height, t], center=true);
+
+    for (x=[-1,1], y=[-1:1]) {
+      translate([x * (faceplate_width()/2 - t*1.5), y * (height/4), 0]) cube(size=[t, 5, t*2], center=true);
+    }
+
     translate([0, carrier_plate_height/2 - t*3 - big_gear_or(), 0]) {
-      translate([-(width-20)/2 + distance_between_big_and_small_gears(), 0, 0]) {
+      translate([-(width-side_gutter)/2 + distance_between_big_and_small_gears(), 0, 0]) {
         for (i=[0:num_digits-1]) {
           translate([distance_between_big_gears()*i, 0, 0]) {
             cylinder(r=d/2, h=t*2, center=true, $fn=36);
@@ -316,21 +323,60 @@ module faceplate_and_gears_assembly() {
 }
 
 module foot_plate() {
-  cube(size=[faceplate_width(), carrier_plate_height / sqrt(2), t], center=true);
+  assign(o = 20)
+  assign(depth = carrier_plate_height / sqrt(2))
+  render()
+  difference() {
+    cube(size=[faceplate_width(), depth, t], center=true);
+    linear_extrude(height=t*2, center=true) hull() {
+      for (x=[-1,1], y=[-1,1]) {
+        translate([x * (faceplate_width()/2 - o), y * (depth / 2 - o), 0]) circle(r=5, $fn=36);
+      }
+    }
+
+    for (x=[-1,1], y=[-1:1]) {
+      translate([x * (faceplate_width()/2 - t*1.5), y * (depth/4), 0]) cube(size=[t, 5, t*2], center=true);
+    }
+  }
+  
 }
 
 module leg() {
-  
+  color([128/255, 128/255, 192/255])
+  assign(depth=carrier_plate_height / sqrt(2))
+  assign(o = 20)
+  assign(outside_corner_diagonal = o * sqrt(2))
+  assign(full_triangle_diagonal = depth / 2 * sqrt(2))
+  assign(inside_diagonal = full_triangle_diagonal - o - outside_corner_diagonal)
+  assign(vertical_offset = inside_diagonal * sqrt(2))
+  translate([-depth/2, -depth/2, 0]) 
+  difference() {
+    union() {
+      linear_extrude(height=t, center=true) polygon(points=[[0,0],[depth,0],[depth,depth]], path=[1,2,3]);
+      for (x=[-1:1]) {
+        translate([depth/2 + x * (depth / 4), 0, 0]) cube(size=[5, t*2, t], center=true);
+      }
+      for (x=[-1:1]) {
+        rotate([0, 0, 45]) translate([carrier_plate_height/2 + x * (carrier_plate_height / 4), 0, 0]) cube(size=[5, t*2, t], center=true);
+      }
+    }
+
+    linear_extrude(height=2*t, center=true) hull() {
+      translate([depth - o - vertical_offset, o, 0]) circle(r=5, $fn=36);
+      translate([depth - o, o, 0]) circle(r=5, $fn=36);
+      translate([depth - o, o + vertical_offset, 0]) circle(r=5, $fn=36);
+    }
+  }
 }
 
 module assembled() {
-  rotate([45, 0, 0]) translate([0, 0, t*4]) faceplate_and_gears_assembly();
+  rotate([45, 0, 0]) translate([0, 0, t*4.5]) faceplate_and_gears_assembly();
   for (x=[-1,1]) {
-    translate([faceplate_width()/2, 0, 0]) 
-      leg();
+    translate([x*(faceplate_width()/2 - t*1.5), 0, 0]) 
+      rotate([90, 0, 90]) leg();
   }
   
-  translate([0, 0, -carrier_plate_height / 2 / sqrt(2)]) foot_plate();
+  translate([0, 0, -t/2 - carrier_plate_height / 2 / sqrt(2)]) foot_plate();
   
 }
 
